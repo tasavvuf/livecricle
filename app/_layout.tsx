@@ -49,8 +49,12 @@ export default function RootLayout() {
             await setPushToken(tokenData.data);
           }
         }
-      } catch (err) {
-        console.warn('[Notification Setup Note]:', err);
+      } catch (err: any) {
+        if (err?.message?.includes('FirebaseApp is not initialized')) {
+          console.log('[Push Notifications]: Running in local dev mode without google-services.json. Remote push will activate when FCM credentials are provided.');
+        } else {
+          console.warn('[Notification Setup Note]:', err?.message || err);
+        }
       }
     }
 
