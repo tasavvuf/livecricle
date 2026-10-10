@@ -198,11 +198,10 @@ export const LeafletMap = forwardRef<LeafletMapRef, LeafletMapProps>(({
           });
           window.map = map;
 
-          // CartoDB Voyager clean tile layer
-          L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+          // Free OpenStreetMap Tile Layer (No API key required)
+          L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
             maxZoom: 19,
-            subdomains: 'abcd',
-            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>'
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
           }).addTo(map);
 
           let userMarker = null;
