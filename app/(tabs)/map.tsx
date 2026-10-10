@@ -8,6 +8,7 @@ import {
   Platform,
   ScrollView,
   Dimensions,
+  StatusBar as RNStatusBar,
 } from 'react-native';
 import MapView, { Region } from 'react-native-maps';
 import { useRouter } from 'expo-router';
@@ -394,7 +395,7 @@ const styles = StyleSheet.create({
   },
   topHeader: {
     position: 'absolute',
-    top: Platform.OS === 'ios' ? 44 : 20,
+    top: (Platform.OS === 'android' ? (RNStatusBar.currentHeight || 28) : 44) + 16,
     left: spacing.lg,
     right: spacing.lg,
     zIndex: 10,
@@ -464,7 +465,7 @@ const styles = StyleSheet.create({
   },
   bannerBar: {
     position: 'absolute',
-    top: Platform.OS === 'ios' ? 104 : 80,
+    top: (Platform.OS === 'android' ? (RNStatusBar.currentHeight || 28) : 44) + 76,
     left: spacing.lg,
     right: spacing.lg,
     zIndex: 10,
@@ -487,7 +488,7 @@ const styles = StyleSheet.create({
   },
   eventPill: {
     position: 'absolute',
-    top: Platform.OS === 'ios' ? 104 : 80,
+    top: (Platform.OS === 'android' ? (RNStatusBar.currentHeight || 28) : 44) + 76,
     left: spacing.lg,
     right: spacing.lg,
     zIndex: 9,

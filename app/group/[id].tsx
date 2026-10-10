@@ -8,6 +8,8 @@ import {
   TouchableOpacity,
   Alert,
   Share,
+  Platform,
+  StatusBar as RNStatusBar,
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -273,7 +275,7 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingHorizontal: spacing.xxl,
-    paddingTop: spacing.lg,
+    paddingTop: (Platform.OS === 'android' ? (RNStatusBar.currentHeight || 28) : 20) + spacing.lg,
     paddingBottom: spacing.huge,
   },
   backRow: {

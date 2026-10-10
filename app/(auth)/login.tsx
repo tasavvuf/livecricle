@@ -8,6 +8,7 @@ import {
   Platform,
   ScrollView,
   SafeAreaView,
+  StatusBar as RNStatusBar,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useAuthStore } from '../../src/store/authStore';
@@ -172,7 +173,7 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingHorizontal: spacing.xxl,
-    paddingTop: spacing.xxl,
+    paddingTop: (Platform.OS === 'android' ? (RNStatusBar.currentHeight || 28) : 20) + spacing.xxl,
     paddingBottom: spacing.huge,
   },
   headerContainer: {

@@ -8,6 +8,8 @@ import {
   SafeAreaView,
   Alert,
   Modal,
+  Platform,
+  StatusBar as RNStatusBar,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -235,7 +237,7 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingHorizontal: spacing.xxl,
-    paddingTop: spacing.xl,
+    paddingTop: (Platform.OS === 'android' ? (RNStatusBar.currentHeight || 28) : 20) + spacing.xl,
     paddingBottom: spacing.huge,
   },
   header: {

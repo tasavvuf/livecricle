@@ -4,11 +4,8 @@ import { Platform } from 'react-native';
 const TOKEN_KEY = 'livecircle_jwt_token';
 const SERVER_URL_KEY = 'livecircle_server_url';
 
-// Default host for local development based on platform
-const DEFAULT_HOST = Platform.select({
-  android: 'http://10.0.2.2:4000',
-  default: 'http://localhost:4000',
-});
+// Default host for local development: localhost:4000 works for web, iOS, and physical Android via adb reverse
+const DEFAULT_HOST = 'http://localhost:4000';
 
 let cachedBaseUrl = DEFAULT_HOST;
 let cachedToken: string | null = null;
