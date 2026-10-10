@@ -40,7 +40,8 @@
     "typescript": "~6.0.3"
   },
   "scripts": {
-    "start": "expo start",
+    "start": "expo start --dev-client --localhost",
+    "dev": "adb reverse tcp:8081 tcp:8081 && adb reverse tcp:4000 tcp:4000 && expo start --dev-client --localhost",
     "reset-project": "node ./scripts/reset-project.js",
     "android": "expo run:android",
     "ios": "expo run:ios",
