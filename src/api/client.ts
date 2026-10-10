@@ -4,23 +4,36 @@ import { Platform } from 'react-native';
 const TOKEN_KEY = 'livecircle_jwt_token';
 const SERVER_URL_KEY = 'livecircle_server_url';
 
-// Default host for local development: localhost:4000 works for web, iOS, and physical Android via adb reverse
-const DEFAULT_HOST = 'http://localhost:4000';
+// Default host: Live production backend on Render (fallback to EXPO_PUBLIC_API_URL if configured)
+export const DEFAULT_HOST = process.env.EXPO_PUBLIC_API_URL || 'https://livecricle.onrender.com';
 
 let cachedBaseUrl = DEFAULT_HOST;
 let cachedToken: string | null = null;
 
 export async function getBaseUrl(): Promise<string> {
   try {
+    let saved: string | null = null;
     if (Platform.OS === 'web') {
-      const saved = typeof window !== 'undefined' ? localStorage.getItem(SERVER_URL_KEY) : null;
-      if (saved && saved.trim().length > 0) {
-        cachedBaseUrl = saved.trim().replace(/\/$/, '');
-        return cachedBaseUrl;
-      }
-      return cachedBaseUrl;
+      saved = typeof window !== 'undefined' ? localStorage.getItem(SERVER_URL_KEY) : null;
+    } else {
+      saved = await SecureStore.getItemAsync(SERVER_URL_KEY);
     }
-    const saved = await SecureStore.getItemAsync(SERVER_URL_KEY);
+
+    // Auto-migrate away from obsolete local development hosts
+    if (
+      saved &&
+      (saved.includes('localhost') ||
+        saved.includes('127.0.0.1') ||
+        saved.includes('10.0.2.2'))
+    ) {
+      saved = null;
+      if (Platform.OS === 'web') {
+        if (typeof window !== 'undefined') localStorage.removeItem(SERVER_URL_KEY);
+      } else {
+        await SecureStore.deleteItemAsync(SERVER_URL_KEY).catch(() => {});
+      }
+    }
+
     if (saved && saved.trim().length > 0) {
       cachedBaseUrl = saved.trim().replace(/\/$/, '');
       return cachedBaseUrl;
@@ -28,6 +41,7 @@ export async function getBaseUrl(): Promise<string> {
   } catch {
     // Fallback if secure store unavailable
   }
+  cachedBaseUrl = DEFAULT_HOST;
   return cachedBaseUrl;
 }
 
@@ -45,6 +59,22 @@ export async function setBaseUrl(url: string): Promise<void> {
   } catch (err) {
     console.error('Failed to save server URL in storage', err);
   }
+}
+
+export async function resetBaseUrl(): Promise<string> {
+  cachedBaseUrl = DEFAULT_HOST;
+  try {
+    if (Platform.OS === 'web') {
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem(SERVER_URL_KEY);
+      }
+    } else {
+      await SecureStore.deleteItemAsync(SERVER_URL_KEY).catch(() => {});
+    }
+  } catch (err) {
+    console.error('Failed to reset server URL in storage', err);
+  }
+  return DEFAULT_HOST;
 }
 
 export async function getStoredToken(): Promise<string | null> {

@@ -16,7 +16,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { colors, radii, spacing, typography } from '../../src/theme';
 import { useAuthStore } from '../../src/store/authStore';
 import { useLocationStore } from '../../src/store/locationStore';
-import { getBaseUrl, setBaseUrl } from '../../src/api/client';
+import { getBaseUrl, setBaseUrl, resetBaseUrl, DEFAULT_HOST } from '../../src/api/client';
 import { Button } from '../../src/components/Button';
 import { Input } from '../../src/components/Input';
 import { Badge } from '../../src/components/Badge';
@@ -53,6 +53,14 @@ export default function SettingsScreen() {
     setCurrentServerUrl(editingUrl.trim());
     setUrlModalVisible(false);
     Alert.alert('Server Updated', `API endpoint set to: ${editingUrl.trim()}`);
+  };
+
+  const handleResetServerUrl = async () => {
+    const defaultUrl = await resetBaseUrl();
+    setCurrentServerUrl(defaultUrl);
+    setEditingUrl(defaultUrl);
+    setUrlModalVisible(false);
+    Alert.alert('Reset to Default', `API endpoint reset to: ${defaultUrl}`);
   };
 
   const handleLogout = async () => {
@@ -206,21 +214,28 @@ export default function SettingsScreen() {
               onChangeText={setEditingUrl}
               autoCapitalize="none"
               autoCorrect={false}
-              placeholder="https://your-service.onrender.com"
+              placeholder="https://livecricle.onrender.com"
             />
 
-            <View style={styles.modalBtnRow}>
+            <View style={{ marginTop: spacing.lg, gap: spacing.sm }}>
+              <View style={styles.modalBtnRow}>
+                <Button
+                  title="Cancel"
+                  variant="outline"
+                  onPress={() => setUrlModalVisible(false)}
+                  style={{ flex: 1 }}
+                />
+                <Button
+                  title="Save Endpoint"
+                  variant="primary"
+                  onPress={handleSaveServerUrl}
+                  style={{ flex: 1 }}
+                />
+              </View>
               <Button
-                title="Cancel"
-                variant="outline"
-                onPress={() => setUrlModalVisible(false)}
-                style={{ flex: 1 }}
-              />
-              <Button
-                title="Save Endpoint"
-                variant="primary"
-                onPress={handleSaveServerUrl}
-                style={{ flex: 1 }}
+                title="Reset to Default (Render)"
+                variant="ghost"
+                onPress={handleResetServerUrl}
               />
             </View>
           </View>
