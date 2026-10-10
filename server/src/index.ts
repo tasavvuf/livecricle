@@ -69,24 +69,17 @@ io.use((socket, next) => {
 // Register real-time tracking and geofence events
 registerLocationSocketHandlers(io);
 
-// MongoDB connection with automated memory fallback
+// MongoDB connection with graceful connection handling
 async function connectDatabase() {
   try {
     console.log(`[Database] Attempting connection to ${MONGODB_URI}...`);
-    await mongoose.connect(MONGODB_URI, { serverSelectionTimeoutMS: 3000 });
+    await mongoose.connect(MONGODB_URI, { serverSelectionTimeoutMS: 2500 });
     console.log('[Database] Successfully connected to MongoDB');
-  } catch (initialErr) {
-    console.warn('[Database] Local/Configured MongoDB connection failed. Initializing MongoMemoryServer fallback...');
-    try {
-      const { MongoMemoryServer } = await import('mongodb-memory-server');
-      const mongod = await MongoMemoryServer.create();
-      const uri = mongod.getUri();
-      await mongoose.connect(uri);
-      console.log(`[Database] Connected to in-memory MongoDB at ${uri}`);
-    } catch (memErr) {
-      console.error('[Database Fatal] Failed to start both configured and in-memory MongoDB:', memErr);
-      process.exit(1);
-    }
+  } catch (initialErr: any) {
+    console.warn(`\n[Database Notice] Could not connect to MongoDB at ${MONGODB_URI}`);
+    console.warn(`[Database Notice] Reason: ${initialErr.message}`);
+    console.warn(`[Database Notice] Server will continue running for health checks and API inspection.`);
+    console.warn(`[Database Notice] To enable persistent data storage, add your MongoDB URI to server/.env:\n                  MONGODB_URI="mongodb+srv://<user>:<password>@cluster.mongodb.net/livecircle"\n`);
   }
 }
 

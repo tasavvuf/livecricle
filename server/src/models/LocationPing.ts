@@ -39,7 +39,6 @@ const LocationPingSchema = new Schema<ILocationPing>(
       type: Date,
       default: Date.now,
       required: true,
-      index: true,
     },
   },
   {
