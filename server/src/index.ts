@@ -73,13 +73,12 @@ registerLocationSocketHandlers(io);
 async function connectDatabase() {
   try {
     console.log(`[Database] Attempting connection to ${MONGODB_URI}...`);
-    await mongoose.connect(MONGODB_URI, { serverSelectionTimeoutMS: 2500 });
+    await mongoose.connect(MONGODB_URI, { serverSelectionTimeoutMS: 10000 });
     console.log('[Database] Successfully connected to MongoDB');
   } catch (initialErr: any) {
-    console.warn(`\n[Database Notice] Could not connect to MongoDB at ${MONGODB_URI}`);
-    console.warn(`[Database Notice] Reason: ${initialErr.message}`);
-    console.warn(`[Database Notice] Server will continue running for health checks and API inspection.`);
-    console.warn(`[Database Notice] To enable persistent data storage, add your MongoDB URI to server/.env:\n                  MONGODB_URI="mongodb+srv://<user>:<password>@cluster.mongodb.net/livecircle"\n`);
+    console.warn(`\n[Database Notice] Initial connection to MongoDB failed: ${initialErr.message}. Retrying in background...`);
+    // Retry in background
+    setTimeout(connectDatabase, 5000);
   }
 }
 
