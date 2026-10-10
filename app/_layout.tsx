@@ -42,19 +42,28 @@ export default function RootLayout() {
           finalStatus = status;
         }
 
+        if (Platform.OS === 'android') {
+          await Notifications.setNotificationChannelAsync('default', {
+            name: 'LiveCircle Alerts',
+            importance: Notifications.AndroidImportance.MAX,
+            vibrationPattern: [0, 250, 250, 250],
+            lightColor: colors.cobalt,
+          }).catch(() => {});
+        }
+
         if (finalStatus === 'granted') {
-          const tokenData = await Notifications.getExpoPushTokenAsync();
-          if (tokenData?.data) {
-            console.log('[Push Token Obtained]:', tokenData.data);
-            await setPushToken(tokenData.data);
+          try {
+            const tokenData = await Notifications.getExpoPushTokenAsync();
+            if (tokenData?.data) {
+              console.log('[Push Token Obtained]:', tokenData.data);
+              await setPushToken(tokenData.data);
+            }
+          } catch (tokenErr: any) {
+            console.log('[Push Notifications]: Dev mode active. Remote push token requires EAS / Firebase configuration.');
           }
         }
       } catch (err: any) {
-        if (err?.message?.includes('FirebaseApp is not initialized')) {
-          console.log('[Push Notifications]: Running in local dev mode without google-services.json. Remote push will activate when FCM credentials are provided.');
-        } else {
-          console.warn('[Notification Setup Note]:', err?.message || err);
-        }
+        console.log('[Notification Setup Note]:', err?.message || err);
       }
     }
 

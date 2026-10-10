@@ -10,7 +10,7 @@ import {
   StatusBar as RNStatusBar,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import MapView, { Region } from 'react-native-maps';
+import MapView, { Region, UrlTile } from 'react-native-maps';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, radii, spacing, typography, warmEditorialMapStyle } from '../../src/theme';
@@ -203,12 +203,22 @@ export default function MapScreen() {
         <MapView
           ref={mapRef}
           style={styles.map}
-          customMapStyle={warmEditorialMapStyle}
+          mapType={Platform.OS === 'android' ? 'none' : 'standard'}
+          customMapStyle={Platform.OS === 'android' ? undefined : warmEditorialMapStyle}
           initialRegion={initialRegion}
           onPress={handleMapPress}
           showsUserLocation={false}
           showsCompass={false}
         >
+          {/* 100% Free OpenStreetMap Tile Layer - No Google Cloud API Key or Billing Required */}
+          <UrlTile
+            urlTemplate="https://tile.openstreetmap.org/{z}/{x}/{y}.png"
+            maximumZ={19}
+            minimumZ={1}
+            shouldReplaceMapContent={true}
+            zIndex={-1}
+          />
+
           {/* Current User Marker */}
           {currentLocation && user && (
             <MemberMarker
