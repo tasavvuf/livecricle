@@ -45,46 +45,46 @@ Designed from the ground up according to the **Warm Editorial Minimalism** visua
 
 ```mermaid
 graph TD
-    subgraph Mobile Client [React Native / Expo Mobile App]
-        UI[Warm Editorial UI & Screens]
-        AuthStore[AuthStore / SecureStore]
-        LocStore[LocationStore & Zustand]
-        FG[Foreground Watcher\nwatchPositionAsync]
-        BG[Background TaskManager\nLOCATION_TRACKING_TASK]
-        Throttle[20m / 10s Haversine Throttle]
-        SocketClient[Socket.io Client Singleton]
+    subgraph MobileClient ["Mobile Client (React Native / Expo)"]
+        UI["Warm Editorial UI & Screens"]
+        AuthStore["AuthStore / SecureStore"]
+        LocStore["LocationStore & Zustand"]
+        FG["Foreground Watcher<br/>watchPositionAsync"]
+        BG["Background TaskManager<br/>LOCATION_TRACKING_TASK"]
+        Throttle["20m / 10s Haversine Throttle"]
+        SocketClient["Socket.io Client Singleton"]
     end
 
-    subgraph Backend [Node.js / Express / Socket.io]
-        WSServer[Socket.io Gateway\nHandshake JWT Auth]
-        REST[Express REST Routes\n/auth, /groups, /me]
-        GeoEngine[Geofence Engine\nHaversine + 2-Reading Debounce]
-        PushService[Expo Push Service\nexpo-server-sdk]
+    subgraph Backend ["Node.js / Express / Socket.io"]
+        WSServer["Socket.io Gateway<br/>Handshake JWT Auth"]
+        REST["Express REST Routes<br/>/auth, /groups, /me"]
+        GeoEngine["Geofence Engine<br/>Haversine + 2-Reading Debounce"]
+        PushService["Expo Push Service<br/>expo-server-sdk"]
     end
 
-    subgraph Storage [MongoDB Database]
-        UserDoc[(User\nName, Email, PushToken)]
-        GroupDoc[(Group\nName, 6-Char Code, Members)]
-        FenceDoc[(Geofence\nCenter Lat/Lng, RadiusM)]
-        PingDoc[(LocationPing\n24-Hour TTL Auto-Expire)]
-        StateDoc[(MemberState\nLast Coordinates, Debounce Map)]
+    subgraph Storage ["MongoDB Database"]
+        UserDoc[("User<br/>Name, Email, PushToken")]
+        GroupDoc[("Group<br/>Name, 6-Char Code, Members")]
+        FenceDoc[("Geofence<br/>Center Lat/Lng, RadiusM")]
+        PingDoc[("LocationPing<br/>24-Hour TTL Auto-Expire")]
+        StateDoc[("MemberState<br/>Last Coordinates, Debounce Map")]
     end
 
     UI --> AuthStore
     UI --> LocStore
     FG --> Throttle
     BG --> Throttle
-    Throttle -->|location_update| SocketClient
-    SocketClient <-->|WebSocket| WSServer
-    UI <-->|REST API| REST
+    Throttle -->|"location_update"| SocketClient
+    SocketClient <-->|"WebSocket"| WSServer
+    UI <-->|"REST API"| REST
 
     REST --> Storage
     WSServer --> PingDoc
     WSServer --> StateDoc
     WSServer --> GeoEngine
-    GeoEngine -->|Enter/Exit Transition| PushService
-    GeoEngine -->|geofence_event| WSServer
-    PushService -->|APNs / FCM| Mobile Client
+    GeoEngine -->|"Enter/Exit Transition"| PushService
+    GeoEngine -->|"geofence_event"| WSServer
+    PushService -->|"APNs / FCM"| UI
 ```
 
 ---
@@ -180,43 +180,53 @@ cd server
 npm install
 npm run dev
 ```
-The server will boot on `http://localhost:4000`. If a remote MongoDB instance is not configured in `MONGODB_URI`, it automatically initializes an in-memory database fallback for immediate local testing.
+The local server boots on `http://localhost:4000`. 
+
+**Production Backend (Render)**:
+LiveCircle is deployed and active on Render at:
+```
+https://livecricle.onrender.com
+```
+Endpoint health check: `https://livecricle.onrender.com/health`
 
 ### 3. Run the Mobile App
 ```bash
-# Start Expo development server
+# Start Expo development server (for native dev client)
 npm start
 ```
 
 Press:
-- `a` to open in Android Emulator
-- `i` to open in iOS Simulator
+- `a` to open in connected Android phone / emulator
 - `w` to open on Web
 
-### 4. Build Android APK via EAS
+### 4. Build Standalone Android APK via EAS
+LiveCircle is linked to EAS under `@tasavvuf/livecircle`. To compile a standalone `.apk` directly in the cloud:
 ```bash
-# Install EAS CLI
-npm install -g eas-cli
-
-# Login to Expo
-eas login
-
-# Build standalone APK
-eas build --platform android --profile preview
+# Start cloud build for standalone APK
+npx eas build -p android --profile preview
 ```
+EAS builds the APK on cloud workers, signs it with a managed keystore, and provides a direct download link and QR code.
 
 ### 5. Deploy Backend to Render
-1. Push repository to GitHub/GitLab.
-2. Connect your repo in Render.
-3. Use the included `render.yaml` Blueprint or create a Web Service pointing to root directory `server`.
-4. Set environment variables:
-   - `MONGODB_URI`: Your MongoDB Atlas connection URI
-   - `JWT_SECRET`: Random secure string
+1. Push repository to GitHub (`https://github.com/tasavvuf/livecricle`).
+2. Connect your repo in Render as a Web Service (Root Directory: `server`).
+3. Build command: `npm install` (runs `postinstall: tsc`).
+4. Start command: `node dist/index.js`.
+5. Environment variables:
+   - `MONGODB_URI`: MongoDB Atlas connection URI
+   - `JWT_SECRET`: JWT signing secret
    - `NODE_ENV`: `production`
+
+---
+
+## 🗺 Map Engine: Zero-API-Key OpenStreetMap & Leaflet
+LiveCircle renders interactive vector maps using an embedded Leaflet 1.9.4 WebView powered by public OpenStreetMap raster tiles (`https://tile.openstreetmap.org/{z}/{x}/{y}.png`).
+- **No Google Play Services required**: Runs on all Android forks and custom ROMs without Google accounts.
+- **Zero API Keys**: No Google Maps billing or API keys needed.
+- **Bidirectional Bridge**: Custom pulsating cobalt markers, initials badges, geofence boundary circles, and tap-to-add geofences communicate smoothly between React Native and the WebView layer.
 
 ---
 
 ## ⚠️ Known Limitations & Considerations
 - **Battery Optimization (OEM Killers)**: Certain Android manufacturers (Xiaomi MIUI, Samsung OneUI, Huawei) aggressively terminate background processes. Users should exclude LiveCircle from battery saver optimizations for continuous background updates.
-- **Web Limitations**: `react-native-maps` and native background services are optimized for physical mobile devices (Android/iOS).
-- **Push Notification Simulator**: Physical devices with real Google Play Services or APNs tokens are required to receive native push notifications via `expo-notifications`.
+- **Push Notification Simulator**: Physical devices with real push tokens are required to receive native push notifications via `expo-notifications`.
