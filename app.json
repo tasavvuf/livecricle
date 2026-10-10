@@ -23,11 +23,6 @@
         "backgroundColor": "#FAF8F1",
         "foregroundImage": "./assets/images/android-icon-foreground.png"
       },
-      "config": {
-        "googleMaps": {
-          "apiKey": "AIzaSyDummyKeyForDevTesting1234567890"
-        }
-      },
       "permissions": [
         "ACCESS_COARSE_LOCATION",
         "ACCESS_FINE_LOCATION",

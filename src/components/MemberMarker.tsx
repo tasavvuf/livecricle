@@ -1,6 +1,5 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { Marker, Callout } from 'react-native-maps';
 import { colors, radii, spacing, typography } from '../theme';
 
 interface MemberMarkerProps {
@@ -14,14 +13,14 @@ interface MemberMarkerProps {
   onPress?: () => void;
 }
 
-function getInitials(name: string): string {
+export function getInitials(name: string): string {
   if (!name) return 'LC';
   const parts = name.trim().split(/\s+/);
   if (parts.length === 1) return parts[0].substring(0, 2).toUpperCase();
   return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
 }
 
-function formatLastSeen(ts?: string): string {
+export function formatLastSeen(ts?: string): string {
   if (!ts) return 'Active';
   const diffMs = Date.now() - new Date(ts).getTime();
   const diffMinutes = Math.floor(diffMs / 60000);
@@ -34,59 +33,37 @@ function formatLastSeen(ts?: string): string {
 }
 
 export const MemberMarker: React.FC<MemberMarkerProps> = ({
-  userId,
   name,
-  lat,
-  lng,
   isCurrentUser = false,
   lastUpdated,
-  insideGeofenceNames = [],
-  onPress,
 }) => {
   const initials = getInitials(name);
   const lastSeenText = formatLastSeen(lastUpdated);
 
   return (
-    <Marker
-      coordinate={{ latitude: lat, longitude: lng }}
-      title={name}
-      description={lastSeenText}
-      onPress={onPress}
-      anchor={{ x: 0.5, y: 0.5 }}
-    >
-      <View style={styles.markerContainer}>
-        <View
+    <View style={styles.markerContainer}>
+      <View
+        style={[
+          styles.avatarCircle,
+          isCurrentUser ? styles.currentUserCircle : styles.memberCircle,
+        ]}
+      >
+        <Text
           style={[
-            styles.avatarCircle,
-            isCurrentUser ? styles.currentUserCircle : styles.memberCircle,
+            styles.avatarText,
+            isCurrentUser ? styles.currentUserText : styles.memberText,
           ]}
         >
-          <Text
-            style={[
-              styles.avatarText,
-              isCurrentUser ? styles.currentUserText : styles.memberText,
-            ]}
-          >
-            {initials}
-          </Text>
-        </View>
-
-        {/* Pulse / Live indicator dot */}
-        <View style={styles.liveDot} />
+          {initials}
+        </Text>
       </View>
-
-      <Callout tooltip>
-        <View style={styles.calloutBubble}>
-          <Text style={styles.calloutName}>{name}</Text>
-          <Text style={styles.calloutStatus}>{lastSeenText}</Text>
-          {insideGeofenceNames.length > 0 && (
-            <Text style={styles.calloutGeofence}>
-              At: {insideGeofenceNames.join(', ')}
-            </Text>
-          )}
-        </View>
-      </Callout>
-    </Marker>
+      <View style={styles.badgeRow}>
+        <Text style={styles.nameLabel} numberOfLines={1}>
+          {name}
+        </Text>
+        <Text style={styles.timeLabel}>{lastSeenText}</Text>
+      </View>
+    </View>
   );
 };
 
@@ -94,8 +71,6 @@ const styles = StyleSheet.create({
   markerContainer: {
     alignItems: 'center',
     justifyContent: 'center',
-    width: 44,
-    height: 44,
   },
   avatarCircle: {
     width: 36,
@@ -104,25 +79,23 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 2,
-    borderColor: colors.white,
+    borderColor: colors.background,
     shadowColor: colors.text,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.15,
     shadowRadius: 4,
-    elevation: 3,
+    elevation: 4,
   },
   currentUserCircle: {
-    backgroundColor: colors.accent,
-    borderColor: colors.white,
+    backgroundColor: colors.cobalt,
   },
   memberCircle: {
-    backgroundColor: colors.text,
-    borderColor: colors.surface,
+    backgroundColor: colors.navy,
   },
   avatarText: {
+    ...typography.badge,
+    fontSize: 12,
     fontWeight: '700',
-    fontSize: 13,
-    letterSpacing: -0.2,
   },
   currentUserText: {
     color: colors.white,
@@ -130,40 +103,26 @@ const styles = StyleSheet.create({
   memberText: {
     color: colors.background,
   },
-  liveDot: {
-    position: 'absolute',
-    top: 2,
-    right: 2,
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-    backgroundColor: colors.statusEnter,
-    borderWidth: 2,
-    borderColor: colors.white,
-  },
-  calloutBubble: {
-    backgroundColor: colors.text,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    borderRadius: radii.sm,
-    minWidth: 120,
+  badgeRow: {
+    backgroundColor: colors.background,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 2,
+    borderRadius: radii.pill,
+    borderWidth: 1,
+    borderColor: colors.border,
+    marginTop: 4,
     alignItems: 'center',
+    elevation: 2,
   },
-  calloutName: {
+  nameLabel: {
     ...typography.caption,
-    color: colors.white,
-    fontWeight: '700',
+    fontSize: 10,
+    fontWeight: '600',
+    color: colors.text,
   },
-  calloutStatus: {
+  timeLabel: {
     ...typography.caption,
-    color: colors.border,
-    fontSize: 11,
-    marginTop: 2,
-  },
-  calloutGeofence: {
-    ...typography.caption,
-    color: colors.accentSecondary,
-    fontSize: 11,
-    marginTop: 2,
+    fontSize: 8,
+    color: colors.textMuted,
   },
 });

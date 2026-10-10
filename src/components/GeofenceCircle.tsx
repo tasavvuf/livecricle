@@ -1,6 +1,5 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { Circle, Marker } from 'react-native-maps';
 import { colors, radii, spacing, typography } from '../theme';
 
 interface GeofenceCircleProps {
@@ -12,53 +11,46 @@ interface GeofenceCircleProps {
 }
 
 export const GeofenceCircle: React.FC<GeofenceCircleProps> = ({
-  id,
   name,
-  lat,
-  lng,
   radiusM,
 }) => {
   return (
-    <>
-      <Circle
-        center={{ latitude: lat, longitude: lng }}
-        radius={radiusM}
-        fillColor={colors.geofenceFill}
-        strokeColor={colors.geofenceStroke}
-        strokeWidth={2}
-      />
-      <Marker
-        coordinate={{ latitude: lat, longitude: lng }}
-        anchor={{ x: 0.5, y: 0.5 }}
-      >
-        <View style={styles.centerBadge}>
-          <Text style={styles.nameText}>{name}</Text>
-          <Text style={styles.radiusText}>{radiusM}m</Text>
-        </View>
-      </Marker>
-    </>
+    <View style={styles.pillContainer}>
+      <Text style={styles.icon}>📍</Text>
+      <Text style={styles.name} numberOfLines={1}>
+        {name}
+      </Text>
+      <Text style={styles.radius}>{radiusM}m</Text>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
-  centerBadge: {
-    backgroundColor: 'rgba(23, 36, 61, 0.85)',
+  pillContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.background,
     paddingHorizontal: spacing.sm,
     paddingVertical: 2,
-    borderRadius: radii.xs,
-    alignItems: 'center',
+    borderRadius: radii.pill,
     borderWidth: 1,
-    borderColor: colors.white,
+    borderColor: colors.border,
+    elevation: 2,
   },
-  nameText: {
-    ...typography.overline,
-    color: colors.white,
+  icon: {
+    fontSize: 10,
+    marginRight: 4,
+  },
+  name: {
+    ...typography.caption,
+    fontSize: 10,
+    fontWeight: '600',
+    color: colors.text,
+  },
+  radius: {
+    ...typography.caption,
     fontSize: 9,
-    letterSpacing: 0.5,
-  },
-  radiusText: {
-    fontSize: 8,
-    color: colors.accentSecondary,
-    fontWeight: '500',
+    color: colors.textMuted,
+    marginLeft: 4,
   },
 });

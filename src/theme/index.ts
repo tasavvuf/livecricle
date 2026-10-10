@@ -25,6 +25,10 @@ export const colors = {
   activeOnline: '#2E7D52',
   inactiveOffline: '#A3A099',
 
+  // Named Colors
+  cobalt: '#3158D8',
+  navy: '#17243D',
+
   // Geofence Map Render Overlays
   geofenceFill: 'rgba(49, 88, 216, 0.12)',
   geofenceStroke: '#3158D8',
@@ -101,6 +105,11 @@ export const typography = {
     fontStyle: 'italic' as const,
     color: colors.accent,
     letterSpacing: 0.2,
+  },
+  badge: {
+    fontSize: 11,
+    fontWeight: '700' as const,
+    letterSpacing: 0.5,
   },
 };
 

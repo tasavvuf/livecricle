@@ -10,15 +10,13 @@ import {
   StatusBar as RNStatusBar,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import MapView, { Region, UrlTile } from 'react-native-maps';
+import { LeafletMap, LeafletMapRef } from '../../src/components/LeafletMap';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { colors, radii, spacing, typography, warmEditorialMapStyle } from '../../src/theme';
+import { colors, radii, spacing, typography } from '../../src/theme';
 import { useAuthStore } from '../../src/store/authStore';
 import { useGroupStore } from '../../src/store/groupStore';
 import { useLocationStore } from '../../src/store/locationStore';
-import { MemberMarker } from '../../src/components/MemberMarker';
-import { GeofenceCircle } from '../../src/components/GeofenceCircle';
 import { GeofenceModal } from '../../src/components/GeofenceModal';
 import { Badge } from '../../src/components/Badge';
 import { Button } from '../../src/components/Button';
@@ -27,7 +25,7 @@ const { width, height } = Dimensions.get('window');
 
 export default function MapScreen() {
   const router = useRouter();
-  const mapRef = useRef<MapView | null>(null);
+  const mapRef = useRef<LeafletMapRef | null>(null);
 
   const user = useAuthStore((s) => s.user);
   const { activeGroup, groups, fetchGroups, createGeofence, selectGroup } = useGroupStore();
@@ -52,19 +50,13 @@ export default function MapScreen() {
   // Center map on user when first location arrives
   useEffect(() => {
     if (currentLocation && mapRef.current) {
-      mapRef.current.animateToRegion({
-        latitude: currentLocation.lat,
-        longitude: currentLocation.lng,
-        latitudeDelta: 0.035,
-        longitudeDelta: 0.035,
-      });
+      mapRef.current.recenter(currentLocation.lat, currentLocation.lng);
     }
   }, [Boolean(currentLocation)]);
 
-  const handleMapPress = (e: any) => {
+  const handleMapPress = (coords: { lat: number; lng: number }) => {
     if (isAddingGeofence) {
-      const { latitude, longitude } = e.nativeEvent.coordinate;
-      setSelectedCoords({ lat: latitude, lng: longitude });
+      setSelectedCoords(coords);
       setModalVisible(true);
       setIsAddingGeofence(false);
     }
@@ -72,32 +64,13 @@ export default function MapScreen() {
 
   const handleRecenter = () => {
     if (currentLocation && mapRef.current) {
-      mapRef.current.animateToRegion({
-        latitude: currentLocation.lat,
-        longitude: currentLocation.lng,
-        latitudeDelta: 0.02,
-        longitudeDelta: 0.02,
-      });
+      mapRef.current.recenter(currentLocation.lat, currentLocation.lng);
     }
   };
 
   const handleFitAllMembers = () => {
-    if (!mapRef.current) return;
-    const coords: Array<{ latitude: number; longitude: number }> = [];
-
-    if (currentLocation) {
-      coords.push({ latitude: currentLocation.lat, longitude: currentLocation.lng });
-    }
-
-    Object.values(memberLocations).forEach((loc) => {
-      coords.push({ latitude: loc.lat, longitude: loc.lng });
-    });
-
-    if (coords.length > 0) {
-      mapRef.current.fitToCoordinates(coords, {
-        edgePadding: { top: 80, right: 60, bottom: 180, left: 60 },
-        animated: true,
-      });
+    if (mapRef.current) {
+      mapRef.current.fitAll();
     }
   };
 
@@ -112,14 +85,6 @@ export default function MapScreen() {
 
   const activeMembers = activeGroup?.members || [];
   const latestEvent = geofenceEvents.length > 0 ? geofenceEvents[0] : null;
-
-  // Fallback initial region
-  const initialRegion: Region = {
-    latitude: currentLocation?.lat || 37.7749,
-    longitude: currentLocation?.lng || -122.4194,
-    latitudeDelta: 0.04,
-    longitudeDelta: 0.04,
-  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -200,64 +165,15 @@ export default function MapScreen() {
 
       {/* Map Surface */}
       <View style={styles.mapContainer}>
-        <MapView
+        <LeafletMap
           ref={mapRef}
-          style={styles.map}
-          mapType={Platform.OS === 'android' ? 'none' : 'standard'}
-          customMapStyle={Platform.OS === 'android' ? undefined : warmEditorialMapStyle}
-          initialRegion={initialRegion}
-          onPress={handleMapPress}
-          showsUserLocation={false}
-          showsCompass={false}
-        >
-          {/* 100% Free OpenStreetMap Tile Layer - No Google Cloud API Key or Billing Required */}
-          <UrlTile
-            urlTemplate="https://tile.openstreetmap.org/{z}/{x}/{y}.png"
-            maximumZ={19}
-            minimumZ={1}
-            shouldReplaceMapContent={true}
-            zIndex={-1}
-          />
-
-          {/* Current User Marker */}
-          {currentLocation && user && (
-            <MemberMarker
-              userId={user.id}
-              name={user.name}
-              lat={currentLocation.lat}
-              lng={currentLocation.lng}
-              isCurrentUser
-              lastUpdated={currentLocation.ts}
-            />
-          )}
-
-          {/* Other Members Markers */}
-          {Object.values(memberLocations).map((loc) => {
-            if (user && loc.userId === user.id) return null;
-            return (
-              <MemberMarker
-                key={loc.userId}
-                userId={loc.userId}
-                name={loc.name}
-                lat={loc.lat}
-                lng={loc.lng}
-                lastUpdated={loc.ts}
-              />
-            );
-          })}
-
-          {/* Active Geofence Circles */}
-          {activeGroup?.geofences.map((gf) => (
-            <GeofenceCircle
-              key={gf._id}
-              id={gf._id}
-              name={gf.name}
-              lat={gf.lat}
-              lng={gf.lng}
-              radiusM={gf.radiusM}
-            />
-          ))}
-        </MapView>
+          currentLocation={currentLocation}
+          user={user}
+          memberLocations={memberLocations}
+          geofences={activeGroup?.geofences || []}
+          isAddingGeofence={isAddingGeofence}
+          onMapClick={handleMapPress}
+        />
 
         {/* Floating Action Buttons */}
         <View style={styles.fabColumn}>
@@ -344,12 +260,7 @@ export default function MapScreen() {
                     const lat = liveLoc?.lat || m.state?.lastLat;
                     const lng = liveLoc?.lng || m.state?.lastLng;
                     if (lat && lng && mapRef.current) {
-                      mapRef.current.animateToRegion({
-                        latitude: lat,
-                        longitude: lng,
-                        latitudeDelta: 0.02,
-                        longitudeDelta: 0.02,
-                      });
+                      mapRef.current.recenter(lat, lng);
                     }
                   }}
                 >
