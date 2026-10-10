@@ -11,7 +11,10 @@
       "supportsTablet": true,
       "bundleIdentifier": "com.livecircle.app",
       "infoPlist": {
-        "UIBackgroundModes": ["location", "fetch"],
+        "UIBackgroundModes": [
+          "location",
+          "fetch"
+        ],
         "NSLocationWhenInUseUsageDescription": "LiveCircle requires your location to display you on the live circle map.",
         "NSLocationAlwaysAndWhenInUseUsageDescription": "LiveCircle uses your background location to alert circle members when you enter or leave designated geofences.",
         "NSLocationAlwaysUsageDescription": "LiveCircle uses your background location to alert circle members when you enter or leave designated geofences."
@@ -58,6 +61,13 @@
     ],
     "experiments": {
       "typedRoutes": true
-    }
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "b8fd1f2a-0e44-4e0a-91d2-dd646aa6b129"
+      }
+    },
+    "owner": "tasavvuf"
   }
 }
