@@ -15,6 +15,14 @@ let cachedToken: string | null = null;
 
 export async function getBaseUrl(): Promise<string> {
   try {
+    if (Platform.OS === 'web') {
+      const saved = typeof window !== 'undefined' ? localStorage.getItem(SERVER_URL_KEY) : null;
+      if (saved && saved.trim().length > 0) {
+        cachedBaseUrl = saved.trim().replace(/\/$/, '');
+        return cachedBaseUrl;
+      }
+      return cachedBaseUrl;
+    }
     const saved = await SecureStore.getItemAsync(SERVER_URL_KEY);
     if (saved && saved.trim().length > 0) {
       cachedBaseUrl = saved.trim().replace(/\/$/, '');
@@ -30,15 +38,26 @@ export async function setBaseUrl(url: string): Promise<void> {
   const cleanUrl = url.trim().replace(/\/$/, '');
   cachedBaseUrl = cleanUrl;
   try {
+    if (Platform.OS === 'web') {
+      if (typeof window !== 'undefined') {
+        localStorage.setItem(SERVER_URL_KEY, cleanUrl);
+      }
+      return;
+    }
     await SecureStore.setItemAsync(SERVER_URL_KEY, cleanUrl);
   } catch (err) {
-    console.error('Failed to save server URL in SecureStore', err);
+    console.error('Failed to save server URL in storage', err);
   }
 }
 
 export async function getStoredToken(): Promise<string | null> {
   if (cachedToken) return cachedToken;
   try {
+    if (Platform.OS === 'web') {
+      const token = typeof window !== 'undefined' ? localStorage.getItem(TOKEN_KEY) : null;
+      cachedToken = token;
+      return token;
+    }
     const token = await SecureStore.getItemAsync(TOKEN_KEY);
     cachedToken = token;
     return token;
@@ -50,13 +69,20 @@ export async function getStoredToken(): Promise<string | null> {
 export async function setStoredToken(token: string | null): Promise<void> {
   cachedToken = token;
   try {
+    if (Platform.OS === 'web') {
+      if (typeof window !== 'undefined') {
+        if (token) localStorage.setItem(TOKEN_KEY, token);
+        else localStorage.removeItem(TOKEN_KEY);
+      }
+      return;
+    }
     if (token) {
       await SecureStore.setItemAsync(TOKEN_KEY, token);
     } else {
       await SecureStore.deleteItemAsync(TOKEN_KEY);
     }
   } catch (err) {
-    console.error('Failed to mutate token in SecureStore', err);
+    console.error('Failed to mutate token in storage', err);
   }
 }
 
